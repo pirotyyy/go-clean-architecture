@@ -1,0 +1,21 @@
+version: "3.5"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: ca_db
+    environment:
+      MYSQL_DATABASE: ca_db
+      MYSQL_ROOT_PASSWORD: root_password 
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password 
+    build:
+      context: .build/db
+      dockerfile: Dockerfile
+    ports:
+      - 3306:3306
+    volumes:
+      - ca_db-data:/var/lib/mysql
+volumes:
+  ca_db-data:
+    driver: local

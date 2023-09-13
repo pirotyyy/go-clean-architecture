@@ -30,9 +30,9 @@ func InitRouter() *echo.Echo {
 	userGroup := e.Group("/user")
 	{
 		handler := NewUserHandler(userUsecase)
-		userGroup.POST("/user/create", handler.CreateUser())
-		userGroup.GET("/user/get", handler.GetUser())
-		userGroup.PUT("/user/update", handler.UpdateUser())
+		userGroup.POST("/create", handler.CreateUser())
+		userGroup.GET("/get", handler.GetUser())
+		userGroup.PUT("/update", handler.UpdateUser())
 	}
 
 	return e

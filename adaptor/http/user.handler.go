@@ -30,12 +30,15 @@ func (uh *userHandler) CreateUser() echo.HandlerFunc {
 			log.Println(err)
 		}
 
-		user, err := uh.usecase.CreateUser(ctx, req.Name)
+		user := &model.User{
+			Name: req.Name,
+		}
+		newUser, err := uh.usecase.CreateUser(ctx, user)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, fmt.Sprintf("failed to create user: %v", err))
 		}
 
-		return c.JSON(http.StatusOK, user.Name)
+		return c.JSON(http.StatusOK, newUser.Name)
 	}
 }
 
@@ -60,11 +63,14 @@ func (uh *userHandler) UpdateUser() echo.HandlerFunc {
 			log.Println(err)
 		}
 
-		user, err := uh.usecase.UpdateUser(ctx, req.Name, c.Request().Header.Get("x-token"))
+		user := &model.User{
+			Name: req.Name,
+		}
+		updatedUser, err := uh.usecase.UpdateUser(ctx, user, c.Request().Header.Get("x-token"))
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, fmt.Sprintf("failed to update user: %v", err))
 		}
 
-		return c.JSON(http.StatusOK, user.Name)
+		return c.JSON(http.StatusOK, updatedUser.Name)
 	}
 }

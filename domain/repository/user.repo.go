@@ -5,8 +5,10 @@ import (
 	"context"
 )
 
+// 抽象化
 type UserRepository interface {
-	Insert(ctx context.Context, name string) (*model.User, error)
-	Select(ctx context.Context, token string) (*model.User, error)
-	Update(ctx context.Context, name string, token string) (*model.User, error)
+	// name でなくmodelでやりとりしたい
+	Create(ctx context.Context, user *model.User) (*model.User, error)
+	GetByToken(ctx context.Context, token string) (*model.User, error)
+	Update(ctx context.Context, user *model.User, token string) (*model.User, error)
 }

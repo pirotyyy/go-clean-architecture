@@ -19,13 +19,13 @@ func NewUserRepository(db *sql.DB) repository.UserRepository {
 	}
 }
 
-func (ur *userRepository) Insert(ctx context.Context, name string) (*model.User, error) {
+func (ur *userRepository) Create(ctx context.Context, user *model.User) (*model.User, error) {
 	const (
 		insert  = "INSERT INTO user (name, token) VALUES (?, ?)"
 		confirm = "SELECT name, created_at FROM user WHERE user_id = ?"
 	)
 
-	res, err := ur.DB.ExecContext(ctx, insert, name, tokenGenerator())
+	res, err := ur.DB.ExecContext(ctx, insert, user.Name, tokenGenerator())
 	if err != nil {
 		return nil, err
 	}
@@ -35,17 +35,17 @@ func (ur *userRepository) Insert(ctx context.Context, name string) (*model.User,
 		return nil, err
 	}
 
-	user := &model.User{
+	newUser := &model.User{
 		UserId: id,
 	}
-	if err := ur.DB.QueryRowContext(ctx, confirm, user.UserId).Scan(&user.Name, &user.CreatedAt); err != nil {
+	if err := ur.DB.QueryRowContext(ctx, confirm, newUser.UserId).Scan(&user.Name, &user.CreatedAt); err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return newUser, nil
 }
 
-func (ur *userRepository) Select(ctx context.Context, token string) (*model.User, error) {
+func (ur *userRepository) GetByToken(ctx context.Context, token string) (*model.User, error) {
 	const (
 		selectCommand = "SELECT user_id, name, created_at FROM user WHERE token = ?"
 	)
@@ -58,23 +58,23 @@ func (ur *userRepository) Select(ctx context.Context, token string) (*model.User
 	return user, nil
 }
 
-func (ur *userRepository) Update(ctx context.Context, name string, token string) (*model.User, error) {
+func (ur *userRepository) Update(ctx context.Context, user *model.User, token string) (*model.User, error) {
 	const (
 		update  = "UPDATE user SET name = ? WHERE token = ?"
 		confirm = "SELECT user_id, name, created_at FROM user WHERE token = ?"
 	)
 
-	_, err := ur.DB.ExecContext(ctx, update, name, token)
+	_, err := ur.DB.ExecContext(ctx, update, user.Name, token)
 	if err != nil {
 		return nil, err
 	}
 
-	var user = &model.User{}
-	if err := ur.DB.QueryRowContext(ctx, confirm, token).Scan(&user.UserId, &user.Name, &user.CreatedAt); err != nil {
+	var updatedUser = &model.User{}
+	if err := ur.DB.QueryRowContext(ctx, confirm, token).Scan(&updatedUser.UserId, &updatedUser.Name, &updatedUser.CreatedAt); err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return updatedUser, nil
 }
 
 func tokenGenerator() string {

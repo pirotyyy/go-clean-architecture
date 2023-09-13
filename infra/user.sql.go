@@ -25,7 +25,8 @@ func (ur *userRepository) Create(ctx context.Context, user *model.User) (*model.
 		confirm = "SELECT name, created_at FROM user WHERE user_id = ?"
 	)
 
-	res, err := ur.DB.ExecContext(ctx, insert, user.Name, tokenGenerator())
+	token := tokenGenerator()
+	res, err := ur.DB.ExecContext(ctx, insert, user.Name, token)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +38,7 @@ func (ur *userRepository) Create(ctx context.Context, user *model.User) (*model.
 
 	newUser := &model.User{
 		UserId: id,
+		Token:  token,
 	}
 	if err := ur.DB.QueryRowContext(ctx, confirm, newUser.UserId).Scan(&user.Name, &user.CreatedAt); err != nil {
 		return nil, err

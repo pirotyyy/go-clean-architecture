@@ -4,6 +4,7 @@ type User struct {
 	UserId    int64  `json:"userId"`
 	Name      string `json:"name"`
 	CreatedAt string `json:"createdAt"`
+	Token     string `json:"token"`
 }
 
 type UserCreateRequest struct {
@@ -11,7 +12,7 @@ type UserCreateRequest struct {
 }
 
 type UserCreateResponse struct {
-	Name string `json:"name"`
+	Token string `json:"token"`
 }
 
 type UserGetRequest struct {

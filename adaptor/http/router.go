@@ -45,5 +45,15 @@ func InitRouter() *echo.Echo {
 		gachaGroup.POST("/draw", handler.Draw())
 	}
 
+	characterRepository := infra.NewCharacterRepository(sqlConn.Conn)
+	characterService := service.NewCharacterService(characterRepository)
+	characterUsecase := usecase.NewCharacterUsecase(characterService)
+
+	characterGroup := e.Group("/character")
+	{
+		handler := NewCharacterHandler(characterUsecase)
+		characterGroup.GET("/list", handler.GetUserCharactersByToken())
+	}
+
 	return e
 }

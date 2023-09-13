@@ -35,5 +35,15 @@ func InitRouter() *echo.Echo {
 		userGroup.PUT("/update", handler.UpdateUser())
 	}
 
+	gachaRepository := infra.NewGachaRepository(sqlConn.Conn)
+	gachaService := service.NewGachaService(gachaRepository)
+	gachaUsecase := usecase.NewGachaUsecase(gachaService)
+
+	gachaGroup := e.Group("/gacha")
+	{
+		handler := NewGachaHandler(gachaUsecase)
+		gachaGroup.POST("/draw", handler.Draw())
+	}
+
 	return e
 }

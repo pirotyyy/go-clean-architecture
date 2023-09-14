@@ -22,8 +22,8 @@ func InitRouter() *echo.Echo {
 		healthCheckGroup.GET(relativePath, healthChcek)
 	}
 
-	sqlConn := infra.SqlConnector()
-	userRepostiroy := infra.NewUserRepository(sqlConn.Conn)
+	dbConn := infra.DBConnector()
+	userRepostiroy := infra.NewUserRepository(dbConn.SqlConn)
 	userService := service.NewUserService(userRepostiroy)
 	userUsecase := usecase.NewUserUsecase(userService)
 
@@ -35,7 +35,7 @@ func InitRouter() *echo.Echo {
 		userGroup.PUT("/update", handler.UpdateUser())
 	}
 
-	gachaRepository := infra.NewGachaRepository(sqlConn.Conn)
+	gachaRepository := infra.NewGachaRepository(dbConn.SqlConn)
 	gachaService := service.NewGachaService(gachaRepository)
 	gachaUsecase := usecase.NewGachaUsecase(gachaService)
 
@@ -45,7 +45,7 @@ func InitRouter() *echo.Echo {
 		gachaGroup.POST("/draw", handler.Draw())
 	}
 
-	characterRepository := infra.NewCharacterRepository(sqlConn.Conn)
+	characterRepository := infra.NewCharacterRepository(dbConn.SqlConn)
 	characterService := service.NewCharacterService(characterRepository)
 	characterUsecase := usecase.NewCharacterUsecase(characterService)
 

@@ -6,13 +6,15 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/redis/go-redis/v9"
 )
 
-type SqlHandler struct {
-	Conn *sql.DB
+type DBHandler struct {
+	SqlConn   *sql.DB
+	RedisConn *redis.Client
 }
 
-func SqlConnector() *SqlHandler {
+func DBConnector() *DBHandler {
 	dbDriver := "mysql"
 	dbUser := os.Getenv("MYSQL_USER")
 	dbPass := os.Getenv("MYSQL_PASSWORD")
@@ -23,7 +25,14 @@ func SqlConnector() *SqlHandler {
 		log.Println(err)
 	}
 
-	sqlHander := new(SqlHandler)
-	sqlHander.Conn = conn
-	return sqlHander
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_ADDR"),
+		Password: "",
+		DB:       0,
+	})
+
+	dbHander := new(DBHandler)
+	dbHander.SqlConn = conn
+	dbHander.RedisConn = redisClient
+	return dbHander
 }

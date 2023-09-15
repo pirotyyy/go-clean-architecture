@@ -23,13 +23,13 @@ func NewUserService(ur repository.UserRepository) UserService {
 }
 
 func (us *userService) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
-	return us.repo.Create(ctx, user)
+	return us.repo.CreateUser(ctx, user)
 }
 
 func (us *userService) GetUser(ctx context.Context, token string) (*model.User, error) {
-	return us.repo.GetByToken(ctx, token)
+	return us.repo.GetUserByToken(ctx, token)
 }
 
 func (us *userService) UpdateUser(ctx context.Context, user *model.User, token string) (*model.User, error) {
-	return us.repo.Update(ctx, user, token)
+	return us.repo.UpdateUser(ctx, user, token)
 }

@@ -19,7 +19,7 @@ func NewUserRepository(db *sql.DB) repository.UserRepository {
 	}
 }
 
-func (ur *userRepository) Create(ctx context.Context, user *model.User) (*model.User, error) {
+func (ur *userRepository) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
 	const (
 		insert  = "INSERT INTO user (name, token) VALUES (?, ?)"
 		confirm = "SELECT name, created_at FROM user WHERE user_id = ?"
@@ -47,7 +47,7 @@ func (ur *userRepository) Create(ctx context.Context, user *model.User) (*model.
 	return newUser, nil
 }
 
-func (ur *userRepository) GetByToken(ctx context.Context, token string) (*model.User, error) {
+func (ur *userRepository) GetUserByToken(ctx context.Context, token string) (*model.User, error) {
 	const (
 		selectCommand = "SELECT user_id, name, created_at FROM user WHERE token = ?"
 	)
@@ -60,7 +60,7 @@ func (ur *userRepository) GetByToken(ctx context.Context, token string) (*model.
 	return user, nil
 }
 
-func (ur *userRepository) Update(ctx context.Context, user *model.User, token string) (*model.User, error) {
+func (ur *userRepository) UpdateUser(ctx context.Context, user *model.User, token string) (*model.User, error) {
 	const (
 		update  = "UPDATE user SET name = ? WHERE token = ?"
 		confirm = "SELECT user_id, name, created_at FROM user WHERE token = ?"

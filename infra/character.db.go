@@ -5,7 +5,6 @@ import (
 	"ca-tech/domain/repository"
 	"context"
 	"database/sql"
-	"fmt"
 )
 
 type characterRepository struct {
@@ -28,8 +27,6 @@ func (cr *characterRepository) GetUserCharactersByToken(ctx context.Context, tok
 	if err := cr.DB.QueryRowContext(ctx, selectUserCommand, token).Scan(&userId); err != nil {
 		return nil, err
 	}
-
-	fmt.Println(userId)
 
 	rows, err := cr.DB.QueryContext(ctx, selectUserCharacterCommand, userId)
 	if err != nil {

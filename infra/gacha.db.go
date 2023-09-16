@@ -21,17 +21,17 @@ func NewGachaRepository(db *sql.DB) repository.GachaRepository {
 	}
 }
 
+var characterList = []*model.Character{}
+
 func (gr *gachaRepository) Draw(ctx context.Context, times int64, token string) (characters []*model.Character, err error) {
 	const (
-		selectCommand     = "SELECT character_id, name, rarity FROM game_character WHERE rarity = ?"
+		selectListCommand = "SELECT character_id, name, rarity FROM game_character"
 		selectUserCommand = "SELECT user_id FROM user WHERE token = ?"
 		insertCommand     = "INSERT INTO user_character (user_id, character_id) VALUES (?, ?)"
 	)
 
-	for i := int64(0); i < times; i++ {
-		targetCharacters := []*model.Character{}
-		rarity := selectRarity()
-		rows, err := gr.DB.QueryContext(ctx, selectCommand, rarity)
+	if len(characterList) == 0 {
+		rows, err := gr.DB.QueryContext(ctx, selectListCommand)
 		if err != nil {
 			return nil, err
 		}
@@ -42,8 +42,14 @@ func (gr *gachaRepository) Draw(ctx context.Context, times int64, token string) 
 			if err := rows.Scan(&char.CharacterID, &char.Name, &char.Rarity); err != nil {
 				return nil, err
 			}
-			targetCharacters = append(targetCharacters, &char)
+			characterList = append(characterList, &char)
 		}
+	}
+
+	for i := int64(0); i < times; i++ {
+		rarity := selectRarity()
+
+		targetCharacters := getTargetCharacters(rarity)
 
 		selectedIndex := r.Intn(len(targetCharacters))
 		selectedChar := targetCharacters[selectedIndex]
@@ -78,4 +84,16 @@ func selectRarity() string {
 	default:
 		return "SSR"
 	}
+}
+
+func getTargetCharacters(rarity string) []*model.Character {
+	var targetCharacters []*model.Character
+
+	for _, char := range characterList {
+		if char.Rarity == rarity {
+			targetCharacters = append(targetCharacters, char)
+		}
+	}
+
+	return targetCharacters
 }

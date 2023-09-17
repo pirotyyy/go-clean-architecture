@@ -1,4 +1,4 @@
-package http
+package gacha
 
 import (
 	"ca-tech/domain/model"

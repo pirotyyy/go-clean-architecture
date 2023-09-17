@@ -1,6 +1,10 @@
 package http
 
 import (
+	"ca-tech/adaptor/http/gacha"
+	"ca-tech/adaptor/http/health"
+	userHTTP "ca-tech/adaptor/http/user"
+	userCharacterHTTP "ca-tech/adaptor/http/user_character"
 	"ca-tech/domain/service"
 	"ca-tech/infra/db"
 	"ca-tech/infra/db/character"
@@ -34,13 +38,14 @@ func InitRouter() *echo.Echo {
 
 	healthCheckGroup := e.Group("/health_check")
 	{
+		handler := health.NewHealthCheckHandler()
 		relativePath := ""
-		healthCheckGroup.GET(relativePath, healthChcek)
+		healthCheckGroup.GET(relativePath, handler.HealthCheck())
 	}
 
 	userGroup := e.Group("/user")
 	{
-		handler := NewUserHandler(userUsecase)
+		handler := userHTTP.NewUserHandler(userUsecase)
 		userGroup.POST("/create", handler.CreateUser())
 		userGroup.GET("/get", handler.GetUser())
 		userGroup.PUT("/update", handler.UpdateUser())
@@ -48,13 +53,13 @@ func InitRouter() *echo.Echo {
 
 	gachaGroup := e.Group("/gacha")
 	{
-		handler := NewGachaHandler(gachaUsecase)
+		handler := gacha.NewGachaHandler(gachaUsecase)
 		gachaGroup.POST("/draw", handler.Draw())
 	}
 
 	userCharacterGroup := e.Group("/user_character")
 	{
-		handler := NewUserCharacterHandler(userCharacterUsecase)
+		handler := userCharacterHTTP.NewUserCharacterHandler(userCharacterUsecase)
 		userCharacterGroup.GET("/list", handler.GetUserCharactersByToken())
 	}
 

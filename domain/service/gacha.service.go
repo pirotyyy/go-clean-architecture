@@ -4,7 +4,6 @@ import (
 	"ca-tech/domain/model"
 	"ca-tech/domain/repository"
 	"context"
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -34,7 +33,6 @@ func NewGachaService(ur repository.UserRepository, cr repository.CharacterReposi
 }
 
 func (gs *gachaService) InitCharacterList(ctx context.Context) error {
-	fmt.Println("InitCharacterList")
 	var err error
 	characterList, err = gs.charaRepo.GetCharacters(ctx)
 	if err != nil {

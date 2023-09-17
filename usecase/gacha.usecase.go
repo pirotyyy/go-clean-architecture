@@ -7,7 +7,7 @@ import (
 )
 
 type GachaUsecase interface {
-	Draw(ctx context.Context, times int64, token string) (characters []*model.Character, err error)
+	Draw(ctx context.Context, times int64, token string) ([]*model.Character, error)
 }
 
 type gachaUsecase struct {
@@ -20,6 +20,10 @@ func NewGachaUsecase(gs service.GachaService) GachaUsecase {
 	}
 }
 
-func (gu *gachaUsecase) Draw(ctx context.Context, times int64, token string) (characters []*model.Character, err error) {
+func (gu *gachaUsecase) Draw(ctx context.Context, times int64, token string) ([]*model.Character, error) {
+	err := gu.svc.InitCharacterList(ctx)
+	if err != nil {
+		return nil, err
+	}
 	return gu.svc.Draw(ctx, times, token)
 }

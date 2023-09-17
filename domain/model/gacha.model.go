@@ -9,7 +9,7 @@ type GachaDrawResponse struct {
 }
 
 type GachaResult struct {
-	CharacterID string `json:"character_id"`
+	CharacterID int64  `json:"character_id"`
 	Name        string `json:"name"`
 	Rarity      string `json:"rarity"`
 }

@@ -6,5 +6,5 @@ import (
 )
 
 type CharacterRepository interface {
-	GetUserCharactersByToken(ctx context.Context, token string) (userCharacters []*model.UserCharacter, err error)
+	GetCharacters(ctx context.Context) ([]*model.Character, error)
 }

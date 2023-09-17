@@ -5,7 +5,6 @@ import (
 	"context"
 )
 
-// 抽象化
 type UserRepository interface {
 	CreateUser(ctx context.Context, user *model.User) (*model.User, error)
 	GetUserByToken(ctx context.Context, token string) (*model.User, error)

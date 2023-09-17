@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-var r = rand.New(rand.NewSource(time.Now().Unix()))
-
 type gachaRepository struct {
 	DB *sql.DB
 }
@@ -21,6 +19,8 @@ func NewGachaRepository(db *sql.DB) repository.GachaRepository {
 	}
 }
 
+var r = rand.New(rand.NewSource(time.Now().Unix()))
+
 var characterList = []*model.Character{}
 
 func (gr *gachaRepository) Draw(ctx context.Context, times int64, token string) (characters []*model.Character, err error) {
@@ -30,6 +30,7 @@ func (gr *gachaRepository) Draw(ctx context.Context, times int64, token string) 
 		insertCommand     = "INSERT INTO user_character (user_id, character_id) VALUES (?, ?)"
 	)
 
+	// 初回時のみキャラクターリストを取得しておく
 	if len(characterList) == 0 {
 		rows, err := gr.DB.QueryContext(ctx, selectListCommand)
 		if err != nil {
@@ -71,6 +72,9 @@ func (gr *gachaRepository) Draw(ctx context.Context, times int64, token string) 
 	return characters, nil
 }
 
+/*
+ * レアリティを選択する
+ */
 func selectRarity() string {
 	num := r.Intn(100)
 
@@ -86,6 +90,9 @@ func selectRarity() string {
 	}
 }
 
+/*
+ * 指定したレアリティのキャラクターを取得する
+ */
 func getTargetCharacters(rarity string) []*model.Character {
 	var targetCharacters []*model.Character
 

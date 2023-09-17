@@ -2,7 +2,10 @@ package http
 
 import (
 	"ca-tech/domain/service"
-	"ca-tech/infra"
+	"ca-tech/infra/db"
+	"ca-tech/infra/db/character"
+	"ca-tech/infra/db/user"
+	userCharacter "ca-tech/infra/db/user_character"
 	"ca-tech/usecase"
 
 	"github.com/labstack/echo/v4"
@@ -16,16 +19,24 @@ func InitRouter() *echo.Echo {
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 
+	dbConn := db.DBConnector()
+	userRepostiroy := user.NewUserRepository(dbConn.SqlConn)
+	characterRepository := character.NewCharacterRepository(dbConn.SqlConn)
+	userCharacterRepository := userCharacter.NewUserCharacterRepository(dbConn.SqlConn)
+
+	userService := service.NewUserService(userRepostiroy)
+	gachaService := service.NewGachaService(userRepostiroy, characterRepository, userCharacterRepository)
+	userCharacterService := service.NewUserCharacterRepository(userRepostiroy, userCharacterRepository)
+
+	userUsecase := usecase.NewUserUsecase(userService)
+	gachaUsecase := usecase.NewGachaUsecase(gachaService)
+	userCharacterUsecase := usecase.NewUserCharacterUsecase(userCharacterService)
+
 	healthCheckGroup := e.Group("/health_check")
 	{
 		relativePath := ""
 		healthCheckGroup.GET(relativePath, healthChcek)
 	}
-
-	dbConn := infra.DBConnector()
-	userRepostiroy := infra.NewUserRepository(dbConn.SqlConn)
-	userService := service.NewUserService(userRepostiroy)
-	userUsecase := usecase.NewUserUsecase(userService)
 
 	userGroup := e.Group("/user")
 	{
@@ -35,24 +46,16 @@ func InitRouter() *echo.Echo {
 		userGroup.PUT("/update", handler.UpdateUser())
 	}
 
-	gachaRepository := infra.NewGachaRepository(dbConn.SqlConn)
-	gachaService := service.NewGachaService(gachaRepository)
-	gachaUsecase := usecase.NewGachaUsecase(gachaService)
-
 	gachaGroup := e.Group("/gacha")
 	{
 		handler := NewGachaHandler(gachaUsecase)
 		gachaGroup.POST("/draw", handler.Draw())
 	}
 
-	characterRepository := infra.NewCharacterRepository(dbConn.SqlConn)
-	characterService := service.NewCharacterService(characterRepository)
-	characterUsecase := usecase.NewCharacterUsecase(characterService)
-
-	characterGroup := e.Group("/character")
+	userCharacterGroup := e.Group("/user_character")
 	{
-		handler := NewCharacterHandler(characterUsecase)
-		characterGroup.GET("/list", handler.GetUserCharactersByToken())
+		handler := NewUserCharacterHandler(userCharacterUsecase)
+		userCharacterGroup.GET("/list", handler.GetUserCharactersByToken())
 	}
 
 	return e

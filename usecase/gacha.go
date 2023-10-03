@@ -21,6 +21,8 @@ func NewGachaUsecase(gs service.GachaService) GachaUsecase {
 }
 
 func (gu *gachaUsecase) Draw(ctx context.Context, times int64, token string) ([]*model.Character, error) {
+	// user
+	// gacha service
 	err := gu.svc.InitCharacterList(ctx)
 	if err != nil {
 		return nil, err

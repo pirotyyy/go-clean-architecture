@@ -6,7 +6,7 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(ctx context.Context, user *model.User) (*model.User, error)
+	CreateUser(ctx context.Context, name string) (*model.User, error)
 	GetUserByToken(ctx context.Context, token string) (*model.User, error)
-	UpdateUser(ctx context.Context, user *model.User, token string) (*model.User, error)
+	UpdateUser(ctx context.Context, name string, token string) (*model.User, error)
 }

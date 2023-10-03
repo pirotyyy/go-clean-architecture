@@ -7,9 +7,9 @@ import (
 )
 
 type UserService interface {
-	CreateUser(ctx context.Context, user *model.User) (*model.User, error)
+	CreateUser(ctx context.Context, name string) (*model.User, error)
 	GetUser(ctx context.Context, token string) (*model.User, error)
-	UpdateUser(ctx context.Context, user *model.User, token string) (*model.User, error)
+	UpdateUser(ctx context.Context, name string, token string) (*model.User, error)
 }
 
 type userService struct {
@@ -22,14 +22,14 @@ func NewUserService(ur repository.UserRepository) UserService {
 	}
 }
 
-func (us *userService) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
-	return us.userRepo.CreateUser(ctx, user)
+func (us *userService) CreateUser(ctx context.Context, name string) (*model.User, error) {
+	return us.userRepo.CreateUser(ctx, name)
 }
 
 func (us *userService) GetUser(ctx context.Context, token string) (*model.User, error) {
 	return us.userRepo.GetUserByToken(ctx, token)
 }
 
-func (us *userService) UpdateUser(ctx context.Context, user *model.User, token string) (*model.User, error) {
-	return us.userRepo.UpdateUser(ctx, user, token)
+func (us *userService) UpdateUser(ctx context.Context, name string, token string) (*model.User, error) {
+	return us.userRepo.UpdateUser(ctx, name, token)
 }

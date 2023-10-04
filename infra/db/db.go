@@ -6,12 +6,10 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/redis/go-redis/v9"
 )
 
 type DBHandler struct {
-	SqlConn   *sql.DB
-	RedisConn *redis.Client
+	SqlConn *sql.DB
 }
 
 func DBConnector() *DBHandler {
@@ -25,14 +23,7 @@ func DBConnector() *DBHandler {
 		log.Println(err)
 	}
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_ADDR"),
-		Password: "",
-		DB:       0,
-	})
-
 	dbHander := new(DBHandler)
 	dbHander.SqlConn = conn
-	dbHander.RedisConn = redisClient
 	return dbHander
 }

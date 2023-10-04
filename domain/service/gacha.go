@@ -15,7 +15,7 @@ var (
 
 type GachaService interface {
 	InitCharacterList(ctx context.Context) error
-	Draw(ctx context.Context, times int64, token string) ([]*model.Character, error)
+	Draw(ctx context.Context, times int64) ([]*model.GachaResult, error)
 }
 
 type gachaService struct {
@@ -41,55 +41,16 @@ func (gs *gachaService) InitCharacterList(ctx context.Context) error {
 	return nil
 }
 
-func (gs *gachaService) Draw(ctx context.Context, times int64, token string) ([]*model.Character, error) {
-	var characters []*model.Character
-
-	user, err := gs.userRepo.GetUserByToken(ctx, token)
-	if err != nil {
-		return nil, err
-	}
+func (gs *gachaService) Draw(ctx context.Context, times int64) ([]*model.GachaResult, error) {
+	var gachaResults []*model.GachaResult
 
 	for i := int64(0); i < times; i++ {
-		rarity := selectRarity()
-		targetCharacters := getTargetCharacters(rarity)
-		character := targetCharacters[r.Intn(len(targetCharacters))]
+		rarity := r.Int63n(100)
+		index := r.Int63()
+		gachaResult := &model.GachaResult{Rarity: rarity, Index: index}
 
-		characters = append(characters, character)
+		gachaResults = append(gachaResults, gachaResult)
 	}
 
-	for _, character := range characters {
-		err := gs.userCharaRepo.Insert(ctx, user.UserId, character.CharacterID)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return characters, nil
-}
-
-func selectRarity() string {
-	num := r.Intn(100)
-
-	switch {
-	case num < 50:
-		return "N"
-	case num < 70:
-		return "R"
-	case num < 90:
-		return "SR"
-	default:
-		return "SSR"
-	}
-}
-
-func getTargetCharacters(rarity string) []*model.Character {
-	var targetCharacters []*model.Character
-
-	for _, char := range characterList {
-		if char.Rarity == rarity {
-			targetCharacters = append(targetCharacters, char)
-		}
-	}
-
-	return targetCharacters
+	return gachaResults, nil
 }

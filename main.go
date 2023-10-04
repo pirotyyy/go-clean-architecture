@@ -3,6 +3,8 @@ package main
 import (
 	adaptorHTTP "ca-tech/adaptor/http"
 	"ca-tech/config"
+	"ca-tech/infra/cache"
+	"ca-tech/infra/db"
 	"context"
 	"log"
 	"net/http"
@@ -16,7 +18,9 @@ func main() {
 	defer stop()
 
 	addr := config.LoadConfig().HTTPInfo.Addr
-	router := adaptorHTTP.InitRouter()
+	dbHandler := db.DBConnector()
+	cacheHandler := cache.CacheConnector()
+	router := adaptorHTTP.InitRouter(dbHandler.SqlConn, cacheHandler.RedisConn)
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: router,

@@ -7,8 +7,6 @@ import (
 	userCharacterHTTP "ca-tech/adaptor/http/user_character"
 	"ca-tech/domain/model"
 	"ca-tech/domain/service"
-	"ca-tech/infra/cache"
-	"ca-tech/infra/db"
 	"ca-tech/infra/db/character"
 	"ca-tech/infra/db/user"
 	userCharacter "ca-tech/infra/db/user_character"
@@ -16,23 +14,21 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"github.com/redis/go-redis/v9"
 	"log"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func InitRouter() *echo.Echo {
+func InitRouter(dbConn *sql.DB, cacheConn *redis.Client) *echo.Echo {
 	e := echo.New()
 
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 
-	dbConn := db.DBConnector()
-	cacheConn := cache.CacheConnector()
-
-	characters, err := GetCharacters(context.Background(), dbConn.SqlConn)
+	characters, err := GetCharacters(context.Background(), dbConn)
 	if err != nil {
 		log.Println(err)
 	}
@@ -42,21 +38,21 @@ func InitRouter() *echo.Echo {
 		log.Fatal(err)
 	}
 
-	err = cacheConn.RedisConn.Set(context.Background(), "characters", jsonData, 0).Err()
+	err = cacheConn.Set(context.Background(), "characters", jsonData, 0).Err()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	userRepostiroy := user.NewUserRepository(dbConn.SqlConn)
-	characterRepository := character.NewCharacterRepository(dbConn.SqlConn)
-	userCharacterRepository := userCharacter.NewUserCharacterRepository(dbConn.SqlConn)
+	userRepostiroy := user.NewUserRepository(dbConn)
+	characterRepository := character.NewCharacterRepository(dbConn)
+	userCharacterRepository := userCharacter.NewUserCharacterRepository(dbConn)
 
 	userService := service.NewUserService(userRepostiroy)
 	gachaService := service.NewGachaService(userRepostiroy, characterRepository, userCharacterRepository)
 	userCharacterService := service.NewUserCharacterRepository(userRepostiroy, userCharacterRepository)
 
 	userUsecase := usecase.NewUserUsecase(userService)
-	gachaUsecase := usecase.NewGachaUsecase(userService, characterRepository, gachaService, userCharacterService, cacheConn.RedisConn)
+	gachaUsecase := usecase.NewGachaUsecase(userService, characterRepository, gachaService, userCharacterService, cacheConn)
 	userCharacterUsecase := usecase.NewUserCharacterUsecase(userCharacterService)
 
 	healthCheckGroup := e.Group("/health_check")

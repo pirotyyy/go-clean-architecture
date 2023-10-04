@@ -7,9 +7,9 @@ import (
 )
 
 type UserUsecase interface {
-	CreateUser(ctx context.Context, user *model.User) (*model.User, error)
+	CreateUser(ctx context.Context, name string) (*model.User, error)
 	GetUser(ctx context.Context, token string) (*model.User, error)
-	UpdateUser(ctx context.Context, user *model.User, token string) (*model.User, error)
+	UpdateUser(ctx context.Context, name string, token string) (*model.User, error)
 }
 
 type userUsecase struct {
@@ -22,14 +22,14 @@ func NewUserUsecase(us service.UserService) UserUsecase {
 	}
 }
 
-func (uu *userUsecase) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
-	return uu.svc.CreateUser(ctx, user)
+func (uu *userUsecase) CreateUser(ctx context.Context, name string) (*model.User, error) {
+	return uu.svc.CreateUser(ctx, name)
 }
 
 func (uu *userUsecase) GetUser(ctx context.Context, token string) (*model.User, error) {
 	return uu.svc.GetUser(ctx, token)
 }
 
-func (uu *userUsecase) UpdateUser(ctx context.Context, user *model.User, token string) (*model.User, error) {
-	return uu.svc.UpdateUser(ctx, user, token)
+func (uu *userUsecase) UpdateUser(ctx context.Context, name string, token string) (*model.User, error) {
+	return uu.svc.UpdateUser(ctx, name, token)
 }

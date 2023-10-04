@@ -19,14 +19,14 @@ func NewUserRepository(db *sql.DB) repository.UserRepository {
 	}
 }
 
-func (ur *userRepository) CreateUser(ctx context.Context, user *model.User) (*model.User, error) {
+func (ur *userRepository) CreateUser(ctx context.Context, name string) (*model.User, error) {
 	const (
 		insert  = "INSERT INTO user (name, token) VALUES (?, ?)"
 		confirm = "SELECT name, created_at FROM user WHERE id = ?"
 	)
 
 	token := tokenGenerator()
-	res, err := ur.DB.ExecContext(ctx, insert, user.Name, token)
+	res, err := ur.DB.ExecContext(ctx, insert, name, token)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *model.User) (*mo
 		UserId: id,
 		Token:  token,
 	}
-	if err := ur.DB.QueryRowContext(ctx, confirm, newUser.UserId).Scan(&user.Name, &user.CreatedAt); err != nil {
+	if err := ur.DB.QueryRowContext(ctx, confirm, newUser.UserId).Scan(&newUser.Name, &newUser.CreatedAt); err != nil {
 		return nil, err
 	}
 
@@ -60,13 +60,13 @@ func (ur *userRepository) GetUserByToken(ctx context.Context, token string) (*mo
 	return user, nil
 }
 
-func (ur *userRepository) UpdateUser(ctx context.Context, user *model.User, token string) (*model.User, error) {
+func (ur *userRepository) UpdateUser(ctx context.Context, name string, token string) (*model.User, error) {
 	const (
 		update  = "UPDATE user SET name = ? WHERE token = ?"
 		confirm = "SELECT id, name, created_at FROM user WHERE token = ?"
 	)
 
-	_, err := ur.DB.ExecContext(ctx, update, user.Name, token)
+	_, err := ur.DB.ExecContext(ctx, update, name, token)
 	if err != nil {
 		return nil, err
 	}

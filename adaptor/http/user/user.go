@@ -36,10 +36,7 @@ func (uh *userHandler) CreateUser() echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, errRes)
 		}
 
-		user := &model.User{
-			Name: req.Name,
-		}
-		newUser, err := uh.usecase.CreateUser(ctx, user)
+		newUser, err := uh.usecase.CreateUser(ctx, req.Name)
 		if err != nil {
 			errRes := &model.ErrResponse{
 				Message: err.Error(),
@@ -98,10 +95,7 @@ func (uh *userHandler) UpdateUser() echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, errRes)
 		}
 
-		user := &model.User{
-			Name: req.Name,
-		}
-		updatedUser, err := uh.usecase.UpdateUser(ctx, user, token)
+		updatedUser, err := uh.usecase.UpdateUser(ctx, req.Name, token)
 		if err != nil {
 			errRes := &model.ErrResponse{
 				Message: err.Error(),

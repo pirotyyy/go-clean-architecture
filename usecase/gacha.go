@@ -4,6 +4,8 @@ import (
 	"ca-tech/domain/model"
 	"ca-tech/domain/service"
 	"context"
+	"encoding/json"
+	"github.com/redis/go-redis/v9"
 )
 
 type GachaUsecase interface {
@@ -15,19 +17,32 @@ type gachaUsecase struct {
 	charaSerivce     service.CharacterService
 	gachaService     service.GachaService
 	userCharaService service.UserCharacterService
+	cache            *redis.Client
 }
 
-func NewGachaUsecase(us service.UserService, cs service.CharacterService, gs service.GachaService, ucs service.UserCharacterService) GachaUsecase {
+func NewGachaUsecase(us service.UserService, cs service.CharacterService, gs service.GachaService, ucs service.UserCharacterService, cache *redis.Client) GachaUsecase {
 	return &gachaUsecase{
 		userService:      us,
 		charaSerivce:     cs,
 		gachaService:     gs,
 		userCharaService: ucs,
+		cache:            cache,
 	}
 }
 
 func (gu *gachaUsecase) Draw(ctx context.Context, times int64, token string) ([]*model.Character, error) {
 	var resultCharacters []*model.Character
+
+	characterCacheData, err := gu.cache.Get(ctx, "characters").Result()
+	if err != nil {
+		return nil, err
+	}
+
+	var characters []*model.Character
+	err = json.Unmarshal([]byte(characterCacheData), &characters)
+	if err != nil {
+		return nil, err
+	}
 
 	// user
 	user, err := gu.userService.GetUser(ctx, token)
@@ -36,11 +51,6 @@ func (gu *gachaUsecase) Draw(ctx context.Context, times int64, token string) ([]
 	}
 	// draw gacha
 	gachaResults, err := gu.gachaService.Draw(ctx, times)
-	if err != nil {
-		return nil, err
-	}
-
-	characters, err := gu.charaSerivce.GetCharacters(ctx)
 	if err != nil {
 		return nil, err
 	}

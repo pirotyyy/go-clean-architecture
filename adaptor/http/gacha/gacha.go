@@ -14,6 +14,20 @@ type gachaHandler struct {
 	usecase usecase.GachaUsecase
 }
 
+type DrawRequest struct {
+	Times int64 `json:"times"`
+}
+
+type DrawResult struct {
+	CharacterID int64        `json:"character_id"`
+	Name        string       `json:"name"`
+	Rarity      model.Rarity `json:"rarity"`
+}
+
+type DrawResponse struct {
+	Results []DrawResult `json:"results"`
+}
+
 func NewGachaHandler(gu usecase.GachaUsecase) *gachaHandler {
 	return &gachaHandler{
 		usecase: gu,
@@ -23,7 +37,7 @@ func NewGachaHandler(gu usecase.GachaUsecase) *gachaHandler {
 func (gh *gachaHandler) Draw() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
-		req := &model.GachaDrawRequest{}
+		req := &DrawRequest{}
 		dec := json.NewDecoder(c.Request().Body)
 		if err := dec.Decode(&req); err != nil {
 			log.Println(err)
@@ -43,16 +57,16 @@ func (gh *gachaHandler) Draw() echo.HandlerFunc {
 			})
 		}
 
-		results := []model.GachaResult{}
+		var results []DrawResult
 		for _, character := range characters {
-			results = append(results, model.GachaResult{
+			results = append(results, DrawResult{
 				CharacterID: character.CharacterID,
 				Name:        character.Name,
 				Rarity:      character.Rarity,
 			})
 		}
 
-		res := &model.GachaDrawResponse{
+		res := &DrawResponse{
 			Results: results,
 		}
 

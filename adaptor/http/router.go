@@ -33,7 +33,7 @@ func InitRouter() *echo.Echo {
 	userCharacterService := service.NewUserCharacterRepository(userRepostiroy, userCharacterRepository)
 
 	userUsecase := usecase.NewUserUsecase(userService)
-	gachaUsecase := usecase.NewGachaUsecase(gachaService)
+	gachaUsecase := usecase.NewGachaUsecase(userService, characterRepository, gachaService, userCharacterService)
 	userCharacterUsecase := usecase.NewUserCharacterUsecase(userCharacterService)
 
 	healthCheckGroup := e.Group("/health_check")

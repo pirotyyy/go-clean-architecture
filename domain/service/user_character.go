@@ -8,6 +8,7 @@ import (
 
 type UserCharacterService interface {
 	GetUserCharactersByToken(ctx context.Context, token string) ([]*model.UserCharacter, error)
+	Insert(ctx context.Context, userId int64, characterId int64) error
 }
 
 type userCharacterService struct {
@@ -28,4 +29,8 @@ func (ucs *userCharacterService) GetUserCharactersByToken(ctx context.Context, t
 		return nil, err
 	}
 	return ucs.userCharaRepo.GetUserCharactersByUserId(ctx, user.UserId)
+}
+
+func (ucs *userCharacterService) Insert(ctx context.Context, userId int64, characterId int64) error {
+	return ucs.userCharaRepo.Insert(ctx, userId, characterId)
 }

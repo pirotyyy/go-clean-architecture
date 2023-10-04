@@ -33,6 +33,7 @@ func NewGachaUsecase(us service.UserService, cs service.CharacterService, gs ser
 func (gu *gachaUsecase) Draw(ctx context.Context, times int64, token string) ([]*model.Character, error) {
 	var resultCharacters []*model.Character
 
+	// get character data from cache
 	characterCacheData, err := gu.cache.Get(ctx, "characters").Result()
 	if err != nil {
 		return nil, err
@@ -49,6 +50,7 @@ func (gu *gachaUsecase) Draw(ctx context.Context, times int64, token string) ([]
 	if err != nil {
 		return nil, err
 	}
+
 	// draw gacha
 	gachaResults, err := gu.gachaService.Draw(ctx, times)
 	if err != nil {

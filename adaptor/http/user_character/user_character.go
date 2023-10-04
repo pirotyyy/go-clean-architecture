@@ -34,7 +34,7 @@ func (uch *userCharacterHandler) GetUserCharactersByToken() echo.HandlerFunc {
 			})
 		}
 
-		characters := []*model.UserCharacter{}
+		var characters []*model.UserCharacter
 		userCharacters = append(characters, userCharacters...)
 
 		res := &model.CharacterListResponse{

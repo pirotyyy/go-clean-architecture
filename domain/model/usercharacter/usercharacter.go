@@ -1,4 +1,4 @@
-package model
+package usercharacter
 
 type UserCharacter struct {
 	UserCharacterID int64  `json:"user_character_id"`

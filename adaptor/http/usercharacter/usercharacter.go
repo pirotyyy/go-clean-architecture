@@ -1,18 +1,20 @@
 package usercharacter
 
 import (
-	"ca-tech/domain/model"
-	"ca-tech/usecase"
+	characterModel "ca-tech/domain/model/character"
+	errModel "ca-tech/domain/model/error"
+	userCharacterModel "ca-tech/domain/model/usercharacter"
+	userCharacterUsecase "ca-tech/usecase/usercharacter"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
 type userCharacterHandler struct {
-	usecase usecase.UserCharacterUsecase
+	usecase userCharacterUsecase.UserCharacterUsecase
 }
 
-func NewUserCharacterHandler(ucu usecase.UserCharacterUsecase) *userCharacterHandler {
+func NewUserCharacterHandler(ucu userCharacterUsecase.UserCharacterUsecase) *userCharacterHandler {
 	return &userCharacterHandler{
 		usecase: ucu,
 	}
@@ -23,21 +25,21 @@ func (uch *userCharacterHandler) GetUserCharactersByToken() echo.HandlerFunc {
 		ctx := c.Request().Context()
 		token := c.Request().Header.Get("x-token")
 		if token == "" {
-			return c.JSON(http.StatusBadRequest, &model.ErrResponse{
+			return c.JSON(http.StatusBadRequest, &errModel.ErrResponse{
 				Message: "token is required"})
 		}
 
 		userCharacters, err := uch.usecase.GetUserCharactersByToken(ctx, token)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, &model.ErrResponse{
+			return c.JSON(http.StatusInternalServerError, &errModel.ErrResponse{
 				Message: err.Error(),
 			})
 		}
 
-		var characters []*model.UserCharacter
+		var characters []*userCharacterModel.UserCharacter
 		userCharacters = append(characters, userCharacters...)
 
-		res := &model.CharacterListResponse{
+		res := &characterModel.CharacterListResponse{
 			Characters: userCharacters,
 		}
 

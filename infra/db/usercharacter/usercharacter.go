@@ -1,8 +1,8 @@
 package userCharacter
 
 import (
-	"ca-tech/domain/model"
-	"ca-tech/domain/repository"
+	userCharacterModel "ca-tech/domain/model/usercharacter"
+	userCharacterRepo "ca-tech/domain/repository/usercharacter"
 	"context"
 	"database/sql"
 )
@@ -11,15 +11,15 @@ type userCharacterRepository struct {
 	DB *sql.DB
 }
 
-func NewUserCharacterRepository(db *sql.DB) repository.UserCharacterRepository {
+func NewUserCharacterRepository(db *sql.DB) userCharacterRepo.UserCharacterRepository {
 	return &userCharacterRepository{
 		DB: db,
 	}
 }
 
-func (ucr *userCharacterRepository) GetUserCharactersByUserId(ctx context.Context, userId int64) ([]*model.UserCharacter, error) {
+func (ucr *userCharacterRepository) GetUserCharactersByUserId(ctx context.Context, userId int64) ([]*userCharacterModel.UserCharacter, error) {
 	const (
-		selectUserCharacterCommand = "SELECT user_character.id, user_character.character_id, game_character.name FROM user_character INNER JOIN game_character ON user_character.character_id = game_character.id WHERE user_character.user_id = ?"
+		selectUserCharacterCommand = "SELECT usercharacter.id, usercharacter.character_id, game_character.name FROM usercharacter INNER JOIN game_character ON usercharacter.character_id = game_character.id WHERE usercharacter.user_id = ?"
 	)
 
 	rows, err := ucr.DB.QueryContext(ctx, selectUserCharacterCommand, userId)
@@ -27,9 +27,9 @@ func (ucr *userCharacterRepository) GetUserCharactersByUserId(ctx context.Contex
 		return nil, err
 	}
 
-	var userCharacters []*model.UserCharacter
+	var userCharacters []*userCharacterModel.UserCharacter
 	for rows.Next() {
-		var uc model.UserCharacter
+		var uc userCharacterModel.UserCharacter
 		if err := rows.Scan(&uc.UserCharacterID, &uc.CharacterID, &uc.Name); err != nil {
 			return nil, err
 		}

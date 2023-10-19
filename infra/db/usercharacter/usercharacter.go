@@ -19,7 +19,7 @@ func NewUserCharacterRepository(db *sql.DB) userCharacterRepo.UserCharacterRepos
 
 func (ucr *userCharacterRepository) GetUserCharactersByUserId(ctx context.Context, userId int64) ([]*userCharacterModel.UserCharacter, error) {
 	const (
-		selectUserCharacterCommand = "SELECT usercharacter.id, usercharacter.character_id, game_character.name FROM usercharacter INNER JOIN game_character ON usercharacter.character_id = game_character.id WHERE usercharacter.user_id = ?"
+		selectUserCharacterCommand = "SELECT user_character.id, user_character.character_id, game_character.name FROM user_character INNER JOIN game_character ON user_character.character_id = game_character.id WHERE user_character.user_id = ?"
 	)
 
 	rows, err := ucr.DB.QueryContext(ctx, selectUserCharacterCommand, userId)

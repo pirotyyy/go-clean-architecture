@@ -1,24 +1,29 @@
 package http
 
 import (
-	"ca-tech/adaptor/http/gacha"
-	"ca-tech/adaptor/http/health"
+	gachaHTTP "ca-tech/adaptor/http/gacha"
+	healthHTTP "ca-tech/adaptor/http/health"
 	userHTTP "ca-tech/adaptor/http/user"
-	userCharacterHTTP "ca-tech/adaptor/http/user_character"
-	"ca-tech/domain/model"
-	"ca-tech/domain/service"
-	"ca-tech/infra/db/character"
-	"ca-tech/infra/db/user"
-	userCharacter "ca-tech/infra/db/user_character"
-	"ca-tech/usecase"
+	userCharacterHTTP "ca-tech/adaptor/http/usercharacter"
+	characterModel "ca-tech/domain/model/character"
+	cacheCharacterService "ca-tech/domain/service/cachecharacter"
+	gachaService "ca-tech/domain/service/gacha"
+	userService "ca-tech/domain/service/user"
+	userCharacterService "ca-tech/domain/service/usercharacter"
+	cacheCharacterCache "ca-tech/infra/cache/character"
+	characterDB "ca-tech/infra/db/character"
+	userDB "ca-tech/infra/db/user"
+	userCharacterDB "ca-tech/infra/db/usercharacter"
+	gachaUsecase "ca-tech/usecase/gacha"
+	userUsecase "ca-tech/usecase/user"
+	userCharacterUsecase "ca-tech/usecase/usercharacter"
 	"context"
 	"database/sql"
 	"encoding/json"
-	"github.com/redis/go-redis/v9"
-	"log"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/redis/go-redis/v9"
+	"log"
 )
 
 func InitRouter(dbConn *sql.DB, cacheConn *redis.Client) *echo.Echo {
@@ -28,43 +33,35 @@ func InitRouter(dbConn *sql.DB, cacheConn *redis.Client) *echo.Echo {
 	e.Use(middleware.Recover())
 	e.Use(middleware.Logger())
 
-	characters, err := GetCharacters(context.Background(), dbConn)
+	err := InitCacheCharacter(context.Background(), dbConn, cacheConn)
 	if err != nil {
 		log.Println(err)
 	}
 
-	jsonData, err := json.Marshal(characters)
-	if err != nil {
-		log.Fatal(err)
-	}
+	ur := userDB.NewUserRepository(dbConn)
+	cr := characterDB.NewCharacterRepository(dbConn)
+	ucr := userCharacterDB.NewUserCharacterRepository(dbConn)
+	ccr := cacheCharacterCache.NewCacheCharacterRepository(cacheConn)
 
-	err = cacheConn.Set(context.Background(), "characters", jsonData, 0).Err()
-	if err != nil {
-		log.Fatal(err)
-	}
+	us := userService.NewUserService(ur)
+	gs := gachaService.NewGachaService(ur, cr, ucr)
+	ucs := userCharacterService.NewUserCharacterRepository(ur, ucr)
+	ccs := cacheCharacterService.NewCacheCharacterService(ccr)
 
-	userRepostiroy := user.NewUserRepository(dbConn)
-	characterRepository := character.NewCharacterRepository(dbConn)
-	userCharacterRepository := userCharacter.NewUserCharacterRepository(dbConn)
-
-	userService := service.NewUserService(userRepostiroy)
-	gachaService := service.NewGachaService(userRepostiroy, characterRepository, userCharacterRepository)
-	userCharacterService := service.NewUserCharacterRepository(userRepostiroy, userCharacterRepository)
-
-	userUsecase := usecase.NewUserUsecase(userService)
-	gachaUsecase := usecase.NewGachaUsecase(userService, characterRepository, gachaService, userCharacterService, cacheConn)
-	userCharacterUsecase := usecase.NewUserCharacterUsecase(userCharacterService)
+	uu := userUsecase.NewUserUsecase(us)
+	gu := gachaUsecase.NewGachaUsecase(us, cr, gs, ucs, ccs)
+	ucu := userCharacterUsecase.NewUserCharacterUsecase(ucs)
 
 	healthCheckGroup := e.Group("/health_check")
 	{
-		handler := health.NewHealthCheckHandler()
+		handler := healthHTTP.NewHealthCheckHandler()
 		relativePath := ""
 		healthCheckGroup.GET(relativePath, handler.HealthCheck())
 	}
 
 	userGroup := e.Group("/user")
 	{
-		handler := userHTTP.NewUserHandler(userUsecase)
+		handler := userHTTP.NewUserHandler(uu)
 		userGroup.POST("/create", handler.CreateUser())
 		userGroup.GET("/get", handler.GetUser())
 		userGroup.PUT("/update", handler.UpdateUser())
@@ -72,31 +69,31 @@ func InitRouter(dbConn *sql.DB, cacheConn *redis.Client) *echo.Echo {
 
 	gachaGroup := e.Group("/gacha")
 	{
-		handler := gacha.NewGachaHandler(gachaUsecase)
+		handler := gachaHTTP.NewGachaHandler(gu)
 		gachaGroup.POST("/draw", handler.Draw())
 	}
 
-	userCharacterGroup := e.Group("/user_character")
+	userCharacterGroup := e.Group("/usercharacter")
 	{
-		handler := userCharacterHTTP.NewUserCharacterHandler(userCharacterUsecase)
+		handler := userCharacterHTTP.NewUserCharacterHandler(ucu)
 		userCharacterGroup.GET("/list", handler.GetUserCharactersByToken())
 	}
 
 	return e
 }
 
-func GetCharacters(ctx context.Context, db *sql.DB) ([]*model.Character, error) {
-	const selectCommand = "SELECT id, name, rarity FROM game_character"
+func GetCharactersByRarity(ctx context.Context, db *sql.DB, rarity characterModel.Rarity) ([]*characterModel.Character, error) {
+	const selectCommand = "SELECT id, name, rarity FROM game_character WHERE rarity = ?"
 
-	rows, err := db.QueryContext(ctx, selectCommand)
+	rows, err := db.QueryContext(ctx, selectCommand, rarity)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var characters []*model.Character
+	var characters []*characterModel.Character
 	for rows.Next() {
-		var c model.Character
+		var c characterModel.Character
 		if err := rows.Scan(&c.CharacterID, &c.Name, &c.Rarity); err != nil {
 			return nil, err
 		}
@@ -104,4 +101,66 @@ func GetCharacters(ctx context.Context, db *sql.DB) ([]*model.Character, error) 
 	}
 
 	return characters, nil
+}
+
+func InitCacheCharacter(ctx context.Context, db *sql.DB, cacheConn *redis.Client) error {
+	charactersN, err := GetCharactersByRarity(ctx, db, characterModel.N)
+	if err != nil {
+		return err
+	}
+
+	charactersR, err := GetCharactersByRarity(ctx, db, characterModel.R)
+	if err != nil {
+		return err
+	}
+	charactersSR, err := GetCharactersByRarity(ctx, db, characterModel.SR)
+	if err != nil {
+		return err
+	}
+	charactersSSR, err := GetCharactersByRarity(ctx, db, characterModel.SSR)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := json.Marshal(charactersN)
+	if err != nil {
+		return err
+	}
+
+	err = cacheConn.Set(ctx, "N", jsonData, 0).Err()
+	if err != nil {
+		return err
+	}
+
+	jsonData, err = json.Marshal(charactersR)
+	if err != nil {
+		return err
+	}
+
+	err = cacheConn.Set(ctx, "R", jsonData, 0).Err()
+	if err != nil {
+		return err
+	}
+
+	jsonData, err = json.Marshal(charactersSR)
+	if err != nil {
+		return err
+	}
+
+	err = cacheConn.Set(ctx, "SR", jsonData, 0).Err()
+	if err != nil {
+		return err
+	}
+
+	jsonData, err = json.Marshal(charactersSSR)
+	if err != nil {
+		return err
+	}
+
+	err = cacheConn.Set(ctx, "SSR", jsonData, 0).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

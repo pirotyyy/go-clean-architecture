@@ -1,4 +1,4 @@
-package model
+package gacha
 
 type GachaResult struct {
 	Rarity int64

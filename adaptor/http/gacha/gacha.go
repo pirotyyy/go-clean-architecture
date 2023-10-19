@@ -1,8 +1,9 @@
 package gacha
 
 import (
-	"ca-tech/domain/model"
-	"ca-tech/usecase"
+	characterModel "ca-tech/domain/model/character"
+	errorModel "ca-tech/domain/model/error"
+	gachaUsecase "ca-tech/usecase/gacha"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 )
 
 type gachaHandler struct {
-	usecase usecase.GachaUsecase
+	usecase gachaUsecase.GachaUsecase
 }
 
 type DrawRequest struct {
@@ -19,16 +20,16 @@ type DrawRequest struct {
 }
 
 type DrawResult struct {
-	CharacterID int64        `json:"character_id"`
-	Name        string       `json:"name"`
-	Rarity      model.Rarity `json:"rarity"`
+	CharacterID int64                 `json:"character_id"`
+	Name        string                `json:"name"`
+	Rarity      characterModel.Rarity `json:"rarity"`
 }
 
 type DrawResponse struct {
 	Results []DrawResult `json:"results"`
 }
 
-func NewGachaHandler(gu usecase.GachaUsecase) *gachaHandler {
+func NewGachaHandler(gu gachaUsecase.GachaUsecase) *gachaHandler {
 	return &gachaHandler{
 		usecase: gu,
 	}
@@ -45,14 +46,14 @@ func (gh *gachaHandler) Draw() echo.HandlerFunc {
 
 		token := c.Request().Header.Get("x-token")
 		if token == "" {
-			return c.JSON(http.StatusBadRequest, &model.ErrResponse{
+			return c.JSON(http.StatusBadRequest, &errorModel.ErrResponse{
 				Message: "token is required",
 			})
 		}
 
 		characters, err := gh.usecase.Draw(ctx, req.Times, token)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, &model.ErrResponse{
+			return c.JSON(http.StatusInternalServerError, &errorModel.ErrResponse{
 				Message: err.Error(),
 			})
 		}

@@ -1,8 +1,9 @@
 package user
 
 import (
-	"ca-tech/domain/model"
-	"ca-tech/usecase"
+	errModel "ca-tech/domain/model/error"
+	userModel "ca-tech/domain/model/user"
+	userUsecase "ca-tech/usecase/user"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -11,10 +12,10 @@ import (
 )
 
 type userHandler struct {
-	usecase usecase.UserUsecase
+	usecase userUsecase.UserUsecase
 }
 
-func NewUserHandler(uu usecase.UserUsecase) *userHandler {
+func NewUserHandler(uu userUsecase.UserUsecase) *userHandler {
 	return &userHandler{
 		usecase: uu,
 	}
@@ -23,14 +24,14 @@ func NewUserHandler(uu usecase.UserUsecase) *userHandler {
 func (uh *userHandler) CreateUser() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
-		req := &model.UserCreateRequest{}
+		req := &userModel.UserCreateRequest{}
 		dec := json.NewDecoder(c.Request().Body)
 		if err := dec.Decode(&req); err != nil {
 			log.Println(err)
 		}
 
 		if req.Name == "" {
-			errRes := &model.ErrResponse{
+			errRes := &errModel.ErrResponse{
 				Message: "name is empty",
 			}
 			return c.JSON(http.StatusBadRequest, errRes)
@@ -38,13 +39,13 @@ func (uh *userHandler) CreateUser() echo.HandlerFunc {
 
 		newUser, err := uh.usecase.CreateUser(ctx, req.Name)
 		if err != nil {
-			errRes := &model.ErrResponse{
+			errRes := &errModel.ErrResponse{
 				Message: err.Error(),
 			}
 			return c.JSON(http.StatusInternalServerError, errRes)
 		}
 
-		res := &model.UserCreateResponse{
+		res := &userModel.UserCreateResponse{
 			Token: newUser.Token,
 		}
 		return c.JSON(http.StatusCreated, res)
@@ -56,7 +57,7 @@ func (uh *userHandler) GetUser() echo.HandlerFunc {
 		ctx := c.Request().Context()
 		token := c.Request().Header.Get("x-token")
 		if token == "" {
-			errRes := &model.ErrResponse{
+			errRes := &errModel.ErrResponse{
 				Message: "token is empty",
 			}
 			return c.JSON(http.StatusBadRequest, errRes)
@@ -64,13 +65,13 @@ func (uh *userHandler) GetUser() echo.HandlerFunc {
 
 		user, err := uh.usecase.GetUser(ctx, token)
 		if err != nil {
-			errRes := &model.ErrResponse{
+			errRes := &errModel.ErrResponse{
 				Message: err.Error(),
 			}
 			return c.JSON(http.StatusInternalServerError, errRes)
 		}
 
-		res := &model.UserGetResponse{
+		res := &userModel.UserGetResponse{
 			Name: user.Name,
 		}
 
@@ -81,7 +82,7 @@ func (uh *userHandler) GetUser() echo.HandlerFunc {
 func (uh *userHandler) UpdateUser() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
-		req := &model.UserUpdateRequest{}
+		req := &userModel.UserUpdateRequest{}
 		dec := json.NewDecoder(c.Request().Body)
 		if err := dec.Decode(&req); err != nil {
 			log.Println(err)
@@ -89,7 +90,7 @@ func (uh *userHandler) UpdateUser() echo.HandlerFunc {
 
 		token := c.Request().Header.Get("x-token")
 		if token == "" {
-			errRes := &model.ErrResponse{
+			errRes := &errModel.ErrResponse{
 				Message: "token is empty",
 			}
 			return c.JSON(http.StatusBadRequest, errRes)
@@ -97,13 +98,13 @@ func (uh *userHandler) UpdateUser() echo.HandlerFunc {
 
 		updatedUser, err := uh.usecase.UpdateUser(ctx, req.Name, token)
 		if err != nil {
-			errRes := &model.ErrResponse{
+			errRes := &errModel.ErrResponse{
 				Message: err.Error(),
 			}
 			return c.JSON(http.StatusInternalServerError, errRes)
 		}
 
-		res := &model.UserUpdateResponse{
+		res := &userModel.UserUpdateResponse{
 			Name: updatedUser.Name,
 		}
 

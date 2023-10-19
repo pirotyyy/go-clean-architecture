@@ -1,4 +1,8 @@
-package model
+package character
+
+import (
+	"ca-tech/domain/model/usercharacter"
+)
 
 type Rarity string
 
@@ -16,5 +20,5 @@ type Character struct {
 }
 
 type CharacterListResponse struct {
-	Characters []*UserCharacter `json:"characters"`
+	Characters []*usercharacter.UserCharacter `json:"characters"`
 }
